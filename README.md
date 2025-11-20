@@ -61,6 +61,7 @@ Open my.ini and add or modify the following lines:
 [mysqld]
 
 server-id = 2
+read_only = 1
 
 Restart MySQL from the XAMPP Control Panel for XAMPP 2.
 Configure Slave to Replicate from Master
@@ -94,15 +95,15 @@ In the config/database.php file, set up the read/write connections:
 
 'mysql' => [
     'read' => [
-        'host' => [
-            '127.0.0.1:3307', // Slave server (on port 3307)
-        ],
+        'host' => ['127.0.0.1'],
+        'port' => 3307, // Slave
     ],
     'write' => [
-        'host' => [
-            '127.0.0.1:3306', // Master server (on port 3306)
-        ],
+        'host' => ['127.0.0.1'],
+        'port' => 3306, // Master
     ],
+    'host' => null, // MUST be null
+    'port' => null, // MUST be null
     'driver'    => 'mysql',
     'database'  => env('DB_DATABASE', 'your_database'),
     'username'  => env('DB_USERNAME', 'your_username'),
@@ -132,13 +133,13 @@ Write queries (e.g., INSERT, UPDATE, DELETE) will be sent to the master server.
 Example:
 
 // Read query (sent to the slave server)
-$users = DB::table('users')->get();
+dd(DB::select("SELECT @@port as port")); // Should show 3307
 
 // Write query (sent to the master server)
 DB::table('users')->insert([
     'name' => 'John Doe',
     'email' => 'john@example.com',
-]);
+]);   // Should insert via 3306
 
 Conclusion
 
@@ -283,17 +284,15 @@ Edit config/database.php:
 
 'mysql' => [
     'read' => [
-        'host' => [
-            '192.168.1.201', // Slave1
-            '192.168.1.202', // Slave2
-        ],
+        'host' => ['127.0.0.1', '127.0.0.1'],
+        'port' => [3308, 3309], // Slave1, Slave2
     ],
     'write' => [
-        'host' => [
-            '192.168.1.101', // Master1
-            '192.168.1.102', // Master2
-        ],
+        'host' => ['127.0.0.1', '127.0.0.1'],
+        'port' => [3306, 3307], // Master1, Master2
     ],
+    'host' => null, // MUST be null
+    'port' => null, // MUST be null
     'driver'    => 'mysql',
     'database'  => env('DB_DATABASE', 'your_database'),
     'username'  => env('DB_USERNAME', 'your_username'),
